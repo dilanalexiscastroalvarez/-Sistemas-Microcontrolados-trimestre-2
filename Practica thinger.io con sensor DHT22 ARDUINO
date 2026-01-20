@@ -1,0 +1,39 @@
+#include <WiFi.h>
+#include <ThingerESP32.h>
+#include <DHT.h>
+
+#define USERNAME "dilancas2008"
+#define DEVICE_ID "esp32_led"
+#define DEVICE_CREDENTIAL "1234567890"
+
+#define WIFI_SSID "MECATRONICA_3ABC"
+#define WIFI_PASSWORD "MEC2025@."
+
+#define DHTPIN 23        // Pin donde conectaste el DATA
+#define DHTTYPE DHT22   // Tipo de sensor
+
+ThingerESP32 thing(USERNAME, DEVICE_ID, DEVICE_CREDENTIAL);
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+
+  thing.add_wifi(WIFI_SSID, WIFI_PASSWORD);
+  dht.begin();
+
+  thing["DHT22"] >> [](pson &out){
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+
+    if (isnan(h) || isnan(t)) {
+      out["error"] = "Fallo al leer DHT22";
+    } else {
+      out["temperatura"] = t;
+      out["humedad"] = h;
+    }
+  };
+}
+
+void loop() {
+  thing.handle();
+}
